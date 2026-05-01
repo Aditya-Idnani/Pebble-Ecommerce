@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff } from 'lucide-react';
-import { api } from '@/lib/api';
+import { authService } from '@/services/authService';
 import { toast } from '@/hooks/use-toast';
 
 function getStrength(pw: string): { label: string; pct: number; color: string } {
@@ -37,7 +37,7 @@ const ResetPassword = () => {
     if (password !== confirmPw) { setError('Passwords don\'t match'); return; }
     setLoading(true); setError('');
 
-    const { error } = await api.auth.updateUser({ password });
+    const { error } = await authService.updateUser({ password });
     setLoading(false);
     if (error) { setError(error.message); return; }
     toast({ title: 'Password updated', description: 'You can now sign in with your new password.' });

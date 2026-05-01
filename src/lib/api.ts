@@ -23,50 +23,6 @@ const setStorage = (key: string, value: any) => {
 };
 
 export const api = {
-  auth: {
-    async signInWithPassword({ email, password }: { email: string; password?: string }) {
-      await delay(500);
-      const user = { id: `user-${Date.now()}`, email };
-      setStorage('pebble_user', user);
-      setStorage('pebble_session', { access_token: 'mock-token', user });
-      return { data: { user }, error: null };
-    },
-    
-    async signInWithOtp({ email }: { email: string; options?: any }) {
-      await delay(500);
-      return { data: {}, error: null };
-    },
-
-    async signUp({ email, password }: { email: string; password?: string }) {
-      await delay(500);
-      const user = { id: `user-${Date.now()}`, email };
-      setStorage('pebble_user', user);
-      setStorage('pebble_session', { access_token: 'mock-token', user });
-      return { data: { user }, error: null };
-    },
-
-    async signOut() {
-      await delay(300);
-      localStorage.removeItem('pebble_user');
-      localStorage.removeItem('pebble_session');
-      return { error: null };
-    },
-
-    async updateUser({ password }: { password?: string }) {
-      await delay(500);
-      return { data: {}, error: null };
-    },
-
-    async resetPasswordForEmail(email: string, options?: any) {
-      await delay(500);
-      return { data: {}, error: null };
-    },
-
-    async getSession() {
-      const session = getStorage('pebble_session', null);
-      return { data: { session }, error: null };
-    }
-  },
 
   db: {
     profiles: {

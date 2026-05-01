@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import { Package, Truck, Heart, Award, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth';
 import { useWishlistStore } from '@/stores/wishlist';
+import { useState, useEffect } from 'react';
+import { orderService } from '@/services/orderService';
 import { useCountUp } from './useCountUp';
-import { mockOrders } from '@/data/mockOrders';
 import { ProductImage } from '@/components/ProductImage';
 
 const getGreeting = () => {
@@ -35,11 +36,45 @@ const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } }
 const fadeUp = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 
 export const AccountOverview = () => {
-  const { profile } = useAuthStore();
+  const { profile, user } = useAuthStore();
   const wishlistCount = useWishlistStore(s => s.items.length);
-  const recentOrders = mockOrders.slice(0, 3);
+  const [userOrders, setUserOrders] = useState<any[]>([]);
 
-  const cards = statCards.map(c => c.label === 'Wishlist Items' ? { ...c, value: wishlistCount } : c);
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user) return;
+      try {
+        const data = await orderService.fetchUserOrders(user.id);
+        const mapped = data.map((o: any) => ({
+          id: o.id,
+          orderNumber: o.id.split('-')[0].toUpperCase(),
+          date: new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          status: o.status,
+          total: o.total,
+          items: o.order_items.map((i: any) => ({
+            id: i.id,
+            name: `Product ${i.product_id}`,
+            image: `https://via.placeholder.com/150?text=Product+${i.product_id}`,
+            qty: i.quantity,
+            price: i.price,
+          }))
+        }));
+        setUserOrders(mapped);
+      } catch (e) {}
+    };
+    fetchOrders();
+  }, [user]);
+
+  const recentOrders = userOrders.slice(0, 3);
+  const totalOrders = userOrders.length;
+  
+  const updatedStatCards = statCards.map(c => {
+    if (c.label === 'Total Orders') return { ...c, value: totalOrders };
+    if (c.label === 'Wishlist Items') return { ...c, value: wishlistCount };
+    return c;
+  });
+
+  const cards = updatedStatCards;
 
   return (
     <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-8">

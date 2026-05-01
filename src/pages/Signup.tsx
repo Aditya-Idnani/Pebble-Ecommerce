@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ShoppingBag, Store, Check } from 'lucide-react';
-import { api } from '@/lib/api';
+import { authService } from '@/services/authService';
+import { api } from '@/lib/api'; // keeping api for user_roles.insert
 import { toast } from '@/hooks/use-toast';
 
 type Step = 'form' | 'role';
@@ -35,7 +36,7 @@ const Signup = () => {
     setLoading(true);
     setErrors({});
 
-    const { data, error } = await api.auth.signUp({
+    const { data, error } = await authService.signUp({
       email, password,
     });
     setLoading(false);

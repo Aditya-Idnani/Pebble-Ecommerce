@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useCartStore } from '@/stores/cart';
 import { useAuthStore } from '@/stores/auth';
+import { orderService } from '@/services/orderService';
 
 const ConfettiDot = ({ index }: { index: number }) => {
   const angle = (index / 20) * 360;
@@ -21,11 +21,24 @@ const ConfettiDot = ({ index }: { index: number }) => {
 };
 
 const OrderConfirmation = () => {
-  const clearCart = useCartStore(s => s.clearCart);
   const user = useAuthStore(s => s.user);
-  const [orderNum] = useState(() => `PBL-2026-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`);
+  const [order, setOrder] = useState<any | null>(null);
 
-  useEffect(() => { clearCart(); }, [clearCart]);
+  useEffect(() => {
+    const fetchLatestOrder = async () => {
+      if (!user) return;
+      try {
+        const data = await orderService.fetchUserOrders(user.id);
+        if (data && data.length > 0) {
+          const o = data[0];
+          setOrder({ orderNumber: o.id.split('-')[0].toUpperCase() });
+        }
+      } catch (e) {}
+    };
+    fetchLatestOrder();
+  }, [user]);
+
+  const orderNum = order ? order.orderNumber : `PBL-2026-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
 
   const estimatedDate = new Date();
   estimatedDate.setDate(estimatedDate.getDate() + 5);

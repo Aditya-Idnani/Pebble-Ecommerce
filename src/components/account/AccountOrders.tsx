@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '@/stores/auth';
+import { orderService } from '@/services/orderService';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ArrowLeft, Check, Truck, Package as PackageIcon, ClipboardCheck, MapPin, X, RotateCcw, Download, FileText } from 'lucide-react';
-import { mockOrders, type OrderStatus, type MockOrder } from '@/data/mockOrders';
+import { type OrderStatus } from '@/data/mockOrders';
 import { ProductImage } from '@/components/ProductImage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,13 +33,47 @@ const filterMap: Record<string, OrderStatus[]> = {
 export const AccountOrders = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [search, setSearch] = useState('');
+  const [userOrders, setUserOrders] = useState<any[]>([]);
 
-  const filtered = mockOrders.filter(o => {
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user) return;
+      try {
+        const data = await orderService.fetchUserOrders(user.id);
+        const mapped = data.map((o: any) => ({
+          id: o.id,
+          orderNumber: o.id.split('-')[0].toUpperCase(),
+          date: new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          status: o.status,
+          total: o.total,
+          items: o.order_items.map((i: any) => ({
+            id: i.id,
+            product_id: i.product_id,
+            name: `Product ${i.product_id}`,
+            image: `https://via.placeholder.com/150?text=Product+${i.product_id}`,
+            qty: i.quantity,
+            price: i.price,
+          }))
+        }));
+        setUserOrders(mapped);
+      } catch (e) {
+        console.error('Failed to fetch orders', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, [user]);
+
+  const filtered = userOrders.filter(o => {
     const f = filterMap[activeTab];
     if (f.length && !f.includes(o.status)) return false;
     if (search) {
       const q = search.toLowerCase();
-      return o.orderNumber.toLowerCase().includes(q) || o.items.some(i => i.name.toLowerCase().includes(q));
+      return o.orderNumber.toLowerCase().includes(q) || o.items.some((i: any) => i.name.toLowerCase().includes(q));
     }
     return true;
   });
@@ -62,7 +98,9 @@ export const AccountOrders = () => {
 
       <div className="space-y-3">
         <AnimatePresence mode="popLayout">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12 text-muted-foreground font-body">Loading orders...</div>
+          ) : filtered.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
               <PackageIcon className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-muted-foreground font-body">No orders found</p>
@@ -114,8 +152,50 @@ const statusToStep: Record<OrderStatus, number> = {
 export const AccountOrderDetail = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const order = mockOrders.find(o => o.id === orderId);
+  const [order, setOrder] = useState<any | null>(null);
 
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!user || !orderId) return;
+      try {
+        const data = await orderService.fetchUserOrders(user.id);
+        const o = data.find((x: any) => x.id === orderId);
+        if (o) {
+          setOrder({
+            id: o.id,
+            orderNumber: o.id.split('-')[0].toUpperCase(),
+            date: new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: o.status,
+            total: o.total,
+            subtotal: o.total,
+            tax: 0,
+            discount: 0,
+            shipping: 0,
+            address: 'Saved Address',
+            paymentMethod: 'Credit Card',
+            items: o.order_items.map((i: any) => ({
+              id: i.id,
+              name: `Product ${i.product_id}`,
+              image: `https://via.placeholder.com/150?text=Product+${i.product_id}`,
+              qty: i.quantity,
+              price: i.price,
+              variant: 'Standard'
+            }))
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrder();
+  }, [orderId, user]);
+
+  if (loading) return <div className="py-12 text-center text-muted-foreground font-body">Loading...</div>;
   if (!order) return <div className="py-12 text-center text-muted-foreground font-body">Order not found</div>;
 
   const currentStep = statusToStep[order.status];

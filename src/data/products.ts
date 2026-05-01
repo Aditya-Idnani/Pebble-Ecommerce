@@ -19,19 +19,15 @@ export interface Product {
   specs?: Record<string, string>;
 }
 
-const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}?w=800&q=80`;
-const picsum = (seed: string, i: number, w = 800, h = 1000) =>
-  `https://picsum.photos/seed/${seed}-${i}/${w}/${h}`;
+const img = (name: string) => `/images/products/${name}.png`;
+const reviewAvatar = (name: string) => `/images/reviews/${name}.png`;
 
 export const products: Product[] = [
   {
     id: "1", title: "Handcrafted Ceramic Vase", slug: "handcrafted-ceramic-vase",
     price: 89, comparePrice: 120,
     images: [
-      unsplash("1526198049595-f32cde2a219d"),
-      unsplash("1597696929736-6d13bed8e6a8"),
-      unsplash("1631125915361-b749fdeea230"),
-      unsplash("1660721671073-e139688fa3cf"),
+      img("ceramic_vase"),
     ],
     category: "Home", rating: 4.8, reviewCount: 124, stock: 5, seller: "Artisan Studio",
     tags: ["ceramic", "handmade"],
@@ -46,10 +42,7 @@ export const products: Product[] = [
     id: "2", title: "Linen Throw Blanket", slug: "linen-throw-blanket",
     price: 145,
     images: [
-      unsplash("1546617956-17c132905cab"),
-      unsplash("1557686652-6731ba12410f"),
-      unsplash("1598622444897-58985111f62b"),
-      unsplash("1639690222869-1e608aa51f82"),
+      img("linen_throw"),
     ],
     category: "Home", rating: 4.9, reviewCount: 89, stock: 12, seller: "Woven Stories",
     tags: ["linen", "cozy"],
@@ -64,10 +57,7 @@ export const products: Product[] = [
     id: "3", title: "Walnut Serving Board", slug: "walnut-serving-board",
     price: 68, comparePrice: 85,
     images: [
-      unsplash("1544892348-e9d2e2324c33"),
-      unsplash("1584526375971-91289298ed95"),
-      unsplash("1624456494702-3453929857bd"),
-      unsplash("1661359782364-7c465ddd653d"),
+      img("walnut_board"),
     ],
     category: "Kitchen", rating: 4.7, reviewCount: 201, stock: 8, seller: "Timber & Grain",
     tags: ["walnut", "kitchen"],
@@ -81,10 +71,7 @@ export const products: Product[] = [
     id: "4", title: "Organic Cotton Robe", slug: "organic-cotton-robe",
     price: 195,
     images: [
-      unsplash("1591176557752-f84109c388ea"),
-      unsplash("1591349215290-8e909a4577d6"),
-      unsplash("1619365734740-b3e1ca4b571c"),
-      unsplash("1661660228516-0aa581671bd0"),
+      img("cotton_robe"),
     ],
     category: "Apparel", rating: 4.6, reviewCount: 67, stock: 15, seller: "Soft Thread",
     tags: ["organic", "cotton"],
@@ -99,10 +86,7 @@ export const products: Product[] = [
     id: "5", title: "Stoneware Mug Set", slug: "stoneware-mug-set",
     price: 54, comparePrice: 72,
     images: [
-      unsplash("1495100497150-fe209c585f50"),
-      unsplash("1517430536-ef20313aea20"),
-      unsplash("1544687216-294c8cf702f2"),
-      unsplash("1572003414077-38770ebec0a4"),
+      img("stoneware_mug"),
     ],
     category: "Kitchen", rating: 4.9, reviewCount: 312, stock: 3, seller: "Artisan Studio",
     tags: ["stoneware", "set"],
@@ -116,10 +100,7 @@ export const products: Product[] = [
     id: "6", title: "Brass Table Lamp", slug: "brass-table-lamp",
     price: 220,
     images: [
-      unsplash("1612735849751-38ba2c6f4458"),
-      unsplash("1646766598333-a45fd416fbbe"),
-      unsplash("1655151419937-e05e5c23d765"),
-      unsplash("1706072613979-e2bddb367f41"),
+      img("brass_lamp"),
     ],
     category: "Lighting", rating: 4.5, reviewCount: 45, stock: 7, seller: "Lumiere",
     tags: ["brass", "lamp"],
@@ -133,10 +114,7 @@ export const products: Product[] = [
     id: "7", title: "Wool Area Rug", slug: "wool-area-rug",
     price: 380, comparePrice: 450,
     images: [
-      unsplash("1564444247765-a377a8bfd0b8"),
-      unsplash("1594040226829-7f251ab46d80"),
-      unsplash("1661658216076-f7245f96afbb"),
-      unsplash("1693899849404-c65b391d3d74"),
+      img("wool_rug"),
     ],
     category: "Home", rating: 4.8, reviewCount: 156, stock: 4, seller: "Woven Stories",
     tags: ["wool", "rug"],
@@ -151,10 +129,7 @@ export const products: Product[] = [
     id: "8", title: "Leather Journal", slug: "leather-journal",
     price: 42,
     images: [
-      unsplash("1583341655648-78bdf4ed6d13"),
-      unsplash("1598404349715-61c2b92cfed3"),
-      unsplash("1627763815344-74ab3b4f6e6a"),
-      unsplash("1639371040157-55b642d03f4f"),
+      img("leather_journal"),
     ],
     category: "Accessories", rating: 4.7, reviewCount: 98, stock: 20, seller: "Timber & Grain",
     tags: ["leather", "journal"],
@@ -171,27 +146,27 @@ export const categories = ["All", "Home", "Kitchen", "Apparel", "Lighting", "Acc
 
 export const mockReviews = [
   {
-    id: "r1", productId: "1", author: "Sarah M.", date: "March 12, 2026", rating: 5, verified: true,
+    id: "r1", productId: "1", author: "Sarah M.", avatar: reviewAvatar("reviewer_1"), date: "March 12, 2026", rating: 5, verified: true,
     title: "Absolutely stunning piece", body: "This vase exceeded all my expectations. The glaze is even more beautiful in person — it catches the light in the most magical way. It's the perfect centerpiece for my dining table.",
-    helpful: 23, images: [picsum("review", 1, 200, 200)],
+    helpful: 23, images: [],
   },
   {
-    id: "r2", productId: "1", author: "James K.", date: "February 28, 2026", rating: 4, verified: true,
+    id: "r2", productId: "1", author: "James K.", avatar: reviewAvatar("reviewer_2"), date: "February 28, 2026", rating: 4, verified: true,
     title: "Beautiful but slightly smaller than expected", body: "Gorgeous craftsmanship and the glaze is truly unique. Only giving 4 stars because it was a bit smaller than I imagined from the photos. Still love it though!",
     helpful: 11, images: [],
   },
   {
-    id: "r3", productId: "1", author: "Aanya P.", date: "February 15, 2026", rating: 5, verified: true,
+    id: "r3", productId: "1", author: "Aanya P.", avatar: reviewAvatar("reviewer_3"), date: "February 15, 2026", rating: 5, verified: true,
     title: "A work of art", body: "I bought this as a gift and my friend was absolutely thrilled. The packaging was also beautiful — felt like a real luxury experience from start to finish.",
-    helpful: 8, images: [picsum("review", 2, 200, 200)],
+    helpful: 8, images: [],
   },
   {
-    id: "r4", productId: "1", author: "Tom R.", date: "January 20, 2026", rating: 5, verified: false,
+    id: "r4", productId: "1", author: "Tom R.", avatar: reviewAvatar("reviewer_1"), date: "January 20, 2026", rating: 5, verified: false,
     title: "Third purchase from this seller", body: "I keep coming back to Artisan Studio because the quality is consistently outstanding. This vase is no exception. The terracotta tone is warm and inviting.",
     helpful: 5, images: [],
   },
   {
-    id: "r5", productId: "1", author: "Mia C.", date: "January 5, 2026", rating: 3, verified: true,
+    id: "r5", productId: "1", author: "Mia C.", avatar: reviewAvatar("reviewer_2"), date: "January 5, 2026", rating: 3, verified: true,
     title: "Nice but arrived with a small chip", body: "The vase itself is lovely but mine arrived with a tiny chip on the base. Customer service was responsive and offered a partial refund. The chip isn't visible when displayed.",
     helpful: 3, images: [],
   },

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Lock, Check, ChevronDown, Truck, Zap, Clock } from 'lucide-react';
 import { useCartStore } from '@/stores/cart';
 import { useAuthStore } from '@/stores/auth';
+import { orderService } from '@/services/orderService';
 import { ProductImage } from '@/components/ProductImage';
 
 const steps = ['Contact', 'Shipping', 'Delivery', 'Payment'];
@@ -12,7 +13,7 @@ const mockServiceablePincodes = ['400001', '400002', '400003', '110001', '110002
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, subtotal, discount, shipping, total, appliedCoupon } = useCartStore();
+  const { items, subtotal, discount, shipping, total, appliedCoupon, clearCart } = useCartStore();
   const user = useAuthStore(s => s.user);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -35,6 +36,9 @@ const Checkout = () => {
   const [billingAddressSame, setBillingAddressSame] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
 
   const sub = subtotal();
   const disc = discount();
@@ -60,13 +64,75 @@ const Checkout = () => {
   const goBack = () => { setDirection(-1); setStep(s => Math.max(s - 1, 0)); };
 
   const handlePlaceOrder = () => {
+    if (!cardNumber || cardNumber.length < 19) {
+      setPaymentError('Please enter a valid card number');
+      return;
+    }
+    if (!expiry || expiry.length < 5) {
+      setPaymentError('Please enter a valid expiry date');
+      return;
+    }
+    if (!cvv || cvv.length < 3) {
+      setPaymentError('Please enter a valid CVV');
+      return;
+    }
+    
     setProcessing(true);
     setPaymentError('');
-    // TODO: replace mock with real backend API to create PaymentIntent
-    setTimeout(() => {
-      setProcessing(false);
-      navigate('/order-confirmation');
-    }, 1500);
+    
+    setTimeout(async () => {
+      try {
+        const orderData = {
+          total: orderTotal,
+          subtotal: sub,
+          shipping: ship,
+          tax: taxEstimate,
+          discount: disc,
+          address: `${shippingForm.address1}${shippingForm.address2 ? `, ${shippingForm.address2}` : ''}, ${shippingForm.city}, ${shippingForm.state} ${shippingForm.pincode}`,
+          paymentMethod: `•••• ${cardNumber.slice(-4)}`,
+          status: 'processing',
+        };
+
+        const orderItems = items.map(i => ({
+          product_id: i.product.id,
+          name: i.product.title,
+          image: i.product.images[0],
+          price: i.product.price,
+          quantity: i.quantity,
+          variant: i.selectedSize || i.selectedColor || 'Standard',
+        }));
+
+        await orderService.createOrder(orderData, orderItems);
+
+        setProcessing(false);
+        clearCart();
+        navigate('/order-confirmation');
+      } catch (e: any) {
+        setProcessing(false);
+        setPaymentError(e.message || 'Failed to create order');
+      }
+    }, 500);
+  };
+
+  const handleCardNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value.replace(/\\D/g, '').slice(0, 16);
+    const parts = [];
+    for (let i = 0; i < v.length; i += 4) {
+      parts.push(v.slice(i, i + 4));
+    }
+    setCardNumber(parts.join(' '));
+  };
+
+  const handleExpiry = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\\D/g, '').slice(0, 4);
+    if (v.length >= 2) {
+      v = v.slice(0, 2) + '/' + v.slice(2);
+    }
+    setExpiry(v);
+  };
+
+  const handleCvv = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCvv(e.target.value.replace(/\\D/g, '').slice(0, 4));
   };
 
   const deliveryOptions = [
@@ -223,10 +289,10 @@ const Checkout = () => {
 
                   {/* Mock card input styled to match theme */}
                   <div className="space-y-4">
-                    <input type="text" placeholder="Card number" maxLength={19} className={inputClass()} />
+                    <input type="text" placeholder="Card number" value={cardNumber} onChange={handleCardNumber} maxLength={19} className={inputClass()} />
                     <div className="grid grid-cols-2 gap-4">
-                      <input type="text" placeholder="MM / YY" maxLength={7} className={inputClass()} />
-                      <input type="text" placeholder="CVC" maxLength={4} className={inputClass()} />
+                      <input type="text" placeholder="MM / YY" value={expiry} onChange={handleExpiry} maxLength={5} className={inputClass()} />
+                      <input type="text" placeholder="CVC" value={cvv} onChange={handleCvv} maxLength={4} className={inputClass()} />
                     </div>
                   </div>
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail } from 'lucide-react';
-import { api } from '@/lib/api';
+import { authService } from '@/services/authService';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +14,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     if (!email.trim()) { setError('Email is required'); return; }
     setLoading(true); setError('');
-    const { error } = await api.auth.resetPasswordForEmail(email);
+    const { error } = await authService.resetPasswordForEmail(email);
     setLoading(false);
     if (error) { setError(error.message); return; }
     setSent(true);

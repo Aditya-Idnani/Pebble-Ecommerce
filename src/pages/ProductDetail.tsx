@@ -487,7 +487,11 @@ const ProductDetail = () => {
                     <div key={review.id} className="border-b border-border pb-6 last:border-0">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-xs font-display text-foreground">
-                          {review.author.split(' ').map(n => n[0]).join('')}
+                        {review.avatar ? (
+                          <img src={review.avatar} alt={review.author} className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                          review.author.split(' ').map(n => n[0]).join('')
+                        )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Shield, Monitor, Smartphone, AlertTriangle } from 'lucide-react';
-import { api } from '@/lib/api';
+import { authService } from '@/services/authService';
 import { useAuthStore } from '@/stores/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,7 @@ export const AccountSecurity = () => {
     if (newPw !== confirmPw) { toast.error('Passwords do not match'); return; }
     if (newPw.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     setUpdating(true);
-    const { error } = await api.auth.updateUser({ password: newPw });
+    const { error } = await authService.updateUser({ password: newPw });
     setUpdating(false);
     if (error) toast.error(error.message);
     else { toast.success('Password updated'); setNewPw(''); setConfirmPw(''); }

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api, User, Session } from '@/lib/api';
+import { authService } from '@/services/authService';
 
 export type AppRole = 'customer' | 'seller' | 'admin';
 
@@ -25,7 +26,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: () => {
     const initAuth = async () => {
-      const { data: { session } } = await api.auth.getSession();
+      const { data: { session } } = await authService.getSession();
       
       if (session?.user) {
         set({ session, user: session.user, isAuthenticated: true });
@@ -47,12 +48,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     initAuth();
 
-    // Mock subscription (does nothing in local state, just returns cleanup function)
-    return () => {};
+    const { data: { subscription } } = authService.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        set({ session, user: session.user as unknown as User, isAuthenticated: true });
+        
+        const [profileRes, roleRes] = await Promise.all([
+          api.db.profiles.get(session.user.id),
+          api.db.user_roles.get(session.user.id)
+        ]);
+
+        set({
+          profile: profileRes.data || null,
+          role: (roleRes.data?.role as AppRole) ?? null,
+          loading: false,
+        });
+      } else {
+        set({ session: null, user: null, isAuthenticated: false, profile: null, role: null, loading: false });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   },
 
   signOut: async () => {
-    await api.auth.signOut();
+    await authService.signOut();
     set({ user: null, session: null, profile: null, role: null, isAuthenticated: false });
   },
 

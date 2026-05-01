@@ -90,7 +90,7 @@ const AppRoutes = () => {
         <Route path="security" element={<AccountSecurity />} />
         <Route path="help" element={<AccountHelp />} />
       </Route>
-      <Route path="/checkout" element={<Checkout />} />
+      <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
       <Route path="/order-confirmation" element={<OrderConfirmation />} />
       <Route path="/seller/onboarding" element={<ProtectedRoute requiredRole="seller"><SellerOnboarding /></ProtectedRoute>} />
       <Route path="/seller" element={<ProtectedRoute requiredRole="seller"><SellerLayout /></ProtectedRoute>}>
@@ -117,7 +117,7 @@ const AppRoutes = () => {
 
 const AppChrome = () => {
   const location = useLocation();
-  const isSellerRoute = location.pathname.startsWith('/seller');
+  const isSellerRoute = location.pathname === '/seller' || location.pathname.startsWith('/seller/');
 
   return (
     <>

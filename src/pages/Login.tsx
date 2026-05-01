@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { api } from '@/lib/api';
+import { authService } from '@/services/authService';
 import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
@@ -32,14 +32,14 @@ const Login = () => {
     setErrors({});
 
     if (useMagic) {
-      const { error } = await api.auth.signInWithOtp({ email });
+      const { error } = await authService.signInWithOtp({ email });
       setLoading(false);
       if (error) { setErrors({ general: error.message }); return; }
       toast({ title: 'Check your inbox', description: 'We sent you a login link.' });
       return;
     }
 
-    const { error } = await api.auth.signInWithPassword({ email, password });
+    const { error } = await authService.signInWithPassword({ email, password });
     setLoading(false);
     if (error) { setErrors({ general: error.message }); return; }
     navigate(from, { replace: true });

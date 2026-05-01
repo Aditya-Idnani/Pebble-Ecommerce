@@ -10,11 +10,11 @@ export const ProductImage = ({ src, alt, className, fallbackClassName, ...props 
 
   if (error || !src) {
     return (
-      <div
-        className={`bg-[#F5EFE6] flex items-center justify-center ${fallbackClassName || className || ''}`}
-      >
-        <CameraOff className="w-8 h-8 text-muted-foreground/40" />
-      </div>
+      <img
+        src="/images/fallback.png"
+        alt="Image unavailable"
+        className={`${className || ''} ${fallbackClassName || ''} object-cover`}
+      />
     );
   }
 
@@ -22,7 +22,7 @@ export const ProductImage = ({ src, alt, className, fallbackClassName, ...props 
     <img
       src={src}
       alt={alt || ''}
-      className={className}
+      className={`${className || ''} object-cover`}
       onError={() => setError(true)}
       {...props}
     />
