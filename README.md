@@ -1,9 +1,5 @@
 # 🛒 Pebble Ecommerce
 
-<p align="center">
-  <img src="<img width="512" height="512" alt="image" src="https://github.com/user-attachments/assets/49800ff2-f827-4262-a1e4-dadf566cfbec" />
-" alt="Pebble Ecommerce Logo" width="120" />
-</p>
 
 <h3 align="center">
 Modern Ecommerce Marketplace Built with React, TypeScript & Supabase
