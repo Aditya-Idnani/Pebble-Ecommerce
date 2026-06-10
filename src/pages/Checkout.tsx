@@ -64,15 +64,33 @@ const Checkout = () => {
   const goBack = () => { setDirection(-1); setStep(s => Math.max(s - 1, 0)); };
 
   const handlePlaceOrder = () => {
-    if (!cardNumber || cardNumber.length < 19) {
+    const sanitizedCardNumber = cardNumber.replace(/\s/g, '');
+    if (!/^\d{16}$/.test(sanitizedCardNumber)) {
       setPaymentError('Please enter a valid card number');
       return;
     }
-    if (!expiry || expiry.length < 5) {
+
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) {
       setPaymentError('Please enter a valid expiry date');
       return;
     }
-    if (!cvv || cvv.length < 3) {
+
+    const [expiryMonth, expiryYearShort] = expiry.split('/').map(Number);
+    if (Number.isNaN(expiryMonth) || expiryMonth < 1 || expiryMonth > 12) {
+      setPaymentError('Please enter a valid expiry month');
+      return;
+    }
+
+    const now = new Date();
+    const expiryYear = 2000 + expiryYearShort;
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    if (expiryYear < currentYear || (expiryYear === currentYear && expiryMonth < currentMonth)) {
+      setPaymentError('Card expiry date cannot be in the past');
+      return;
+    }
+
+    if (!/^\d{3,4}$/.test(cvv)) {
       setPaymentError('Please enter a valid CVV');
       return;
     }
@@ -89,7 +107,7 @@ const Checkout = () => {
           tax: taxEstimate,
           discount: disc,
           address: `${shippingForm.address1}${shippingForm.address2 ? `, ${shippingForm.address2}` : ''}, ${shippingForm.city}, ${shippingForm.state} ${shippingForm.pincode}`,
-          paymentMethod: `•••• ${cardNumber.slice(-4)}`,
+          paymentMethod: `•••• ${sanitizedCardNumber.slice(-4)}`,
           status: 'processing',
         };
 
@@ -115,24 +133,44 @@ const Checkout = () => {
   };
 
   const handleCardNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value.replace(/\\D/g, '').slice(0, 16);
+    const v = e.target.value.replace(/\D/g, '').slice(0, 16);
     const parts = [];
     for (let i = 0; i < v.length; i += 4) {
       parts.push(v.slice(i, i + 4));
     }
     setCardNumber(parts.join(' '));
+    setPaymentError('');
   };
 
   const handleExpiry = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let v = e.target.value.replace(/\\D/g, '').slice(0, 4);
-    if (v.length >= 2) {
-      v = v.slice(0, 2) + '/' + v.slice(2);
+    let v = e.target.value.replace(/\D/g, '').slice(0, 4);
+
+    if (v.length === 1 && Number(v) > 1) {
+      v = `0${v}`;
     }
+
+    if (v.length >= 2) {
+      const month = Math.min(Math.max(Number(v.slice(0, 2)), 1), 12);
+      const mm = String(month).padStart(2, '0');
+      const yy = v.slice(2, 4);
+      v = yy ? `${mm}/${yy}` : mm;
+    }
+
     setExpiry(v);
+    setPaymentError('');
   };
 
   const handleCvv = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCvv(e.target.value.replace(/\\D/g, '').slice(0, 4));
+    setCvv(e.target.value.replace(/\D/g, '').slice(0, 4));
+    setPaymentError('');
+  };
+
+  const handleNumericKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (allowedKeys.includes(e.key)) return;
+    if (/^\d$/.test(e.key)) return;
+    e.preventDefault();
   };
 
   const deliveryOptions = [
@@ -289,10 +327,40 @@ const Checkout = () => {
 
                   {/* Mock card input styled to match theme */}
                   <div className="space-y-4">
-                    <input type="text" placeholder="Card number" value={cardNumber} onChange={handleCardNumber} maxLength={19} className={inputClass()} />
+                    <input
+                      type="text"
+                      placeholder="Card number"
+                      value={cardNumber}
+                      onChange={handleCardNumber}
+                      onKeyDown={handleNumericKeyDown}
+                      maxLength={19}
+                      inputMode="numeric"
+                      autoComplete="cc-number"
+                      className={inputClass()}
+                    />
                     <div className="grid grid-cols-2 gap-4">
-                      <input type="text" placeholder="MM / YY" value={expiry} onChange={handleExpiry} maxLength={5} className={inputClass()} />
-                      <input type="text" placeholder="CVC" value={cvv} onChange={handleCvv} maxLength={4} className={inputClass()} />
+                      <input
+                        type="text"
+                        placeholder="MM / YY"
+                        value={expiry}
+                        onChange={handleExpiry}
+                        onKeyDown={handleNumericKeyDown}
+                        maxLength={5}
+                        inputMode="numeric"
+                        autoComplete="cc-exp"
+                        className={inputClass()}
+                      />
+                      <input
+                        type="text"
+                        placeholder="CVC"
+                        value={cvv}
+                        onChange={handleCvv}
+                        onKeyDown={handleNumericKeyDown}
+                        maxLength={4}
+                        inputMode="numeric"
+                        autoComplete="cc-csc"
+                        className={inputClass()}
+                      />
                     </div>
                   </div>
 

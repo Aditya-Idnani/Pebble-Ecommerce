@@ -22,10 +22,19 @@ export interface OrderInput {
 
 export const orderService = {
   async createOrder(orderData: OrderInput, items: OrderItemInput[]) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user) throw new Error('You must be logged in to place an order');
+
     // Insert order
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
+        user_id: user.id,
         total: orderData.total,
         status: orderData.status,
       })
